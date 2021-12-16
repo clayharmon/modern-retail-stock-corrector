@@ -37,6 +37,7 @@ function cc_mrsc_settings_html() {
       
       <input type="hidden" name="action" value="cc_mrsc_admin_form" />
       <input style="margin:10px 0;" type="submit" name="mrsc_fix_all" id="submit" class="button button-primary" value="Fix All Stock Statuses" />
+      <input style="margin:10px 0;" type="submit" name="mrsc_fix_five" id="submit" class="button button-primary" value="Fix 5 Stock Statuses" />
     </form>
     <h2>Products with Incorrect Stock Status:</h2>
 		<?php
@@ -72,10 +73,10 @@ function cc_mrsc_print_table_products_with_incorrect_stock_status(){
 	$total_products = count($products_with_incorrect_stock_status);
 	if($total_products !== 0 ){
 	?>
+    <p>Total: <?php echo $total_products ?></p>
 		<table class="wp-list-table widefat fixed striped table-view-list posts">
 			<thead>
 				<th scope="col" id="name" class="manage-column column-name"><span>Name</span></th>
-				<th scope="col" id="total" class="manage-column column-total"><span>Total: <?php echo $total_products ?></span></th>
 			</thead>
 			<tbody id="the-list">
 				<?php
@@ -83,7 +84,7 @@ function cc_mrsc_print_table_products_with_incorrect_stock_status(){
 					$product = wc_get_product( $queried_product->post_parent );
 					?>
 					<tr>
-						<td colspan='2'>
+						<td>
 							<a href='/wp-admin/post.php?post=<?php echo $queried_product->post_parent; ?>&action=edit' target='_blank'>
 								<?php echo $product->get_name(); ?>
 							</a>
@@ -124,10 +125,30 @@ function cc_mrsc_admin_form_action(){
   }
 
   if( isset( $_POST['mrsc_fix_all'] ) ){
+    cc_mrsc_correct_all_incorrect_stock_statuses();
+  }
+  if( isset( $_POST['mrsc_fix_five'] ) ){
     cc_mrsc_correct_all_incorrect_stock_statuses(5);
   }
 
   wp_redirect( $_SERVER['HTTP_REFERER'] . '&nonce_verify=true' );
   exit();
+}
+
+
+register_activation_hook( __FILE__, 'cc_mrsc_create_hourly_stock_corrector_schedule' );
+function cc_mrsc_create_hourly_stock_corrector_schedule(){
+  $timestamp = wp_next_scheduled( 'cc_mrsc_create_hourly_stock_corrector' );
+
+  if( !$timestamp ){
+    wp_schedule_event( time(), 'hourly', 'cc_mrsc_create_hourly_stock_corrector' );
+  }
+}
+
+add_action( 'cc_mrsc_create_hourly_stock_corrector', 'cc_mrsc_correct_all_incorrect_stock_statuses' );
+
+register_deactivation_hook( __FILE__, 'cc_mrsc_remove_hourly_stock_corrector_schedule' );
+function cc_mrsc_remove_hourly_stock_corrector_schedule(){
+  wp_clear_scheduled_hook( 'cc_mrsc_create_hourly_stock_corrector' );
 }
 ?>

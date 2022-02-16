@@ -3,7 +3,7 @@
 Plugin Name: Modern Retail Stock Corrector 
 Description: Checks for incorrect stock status for product variations.
 Author: Clay Harmon
-Version: 1.0.0 
+Version: 1.1.0 
 Text Domain: cc-mrsc
 */
 

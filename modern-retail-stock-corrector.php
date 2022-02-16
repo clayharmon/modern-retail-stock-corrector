@@ -3,7 +3,7 @@
 Plugin Name: Modern Retail Stock Corrector 
 Description: Checks for incorrect stock status for product variations.
 Author: Clay Harmon
-Version: 1.1.0 
+Version: 1.1.1 
 Text Domain: cc-mrsc
 */
 
@@ -73,7 +73,7 @@ function cc_mrsc_get_variations_with_incorrect_status($limit = -1){
             SELECT p.ID, p.post_parent, pm.meta_value as stock, pm2.meta_value as stock_status
             FROM {$wpdb->prefix}posts as p
             JOIN {$wpdb->prefix}postmeta as pm ON p.ID = pm.post_id
-            JOIN {$wpdb->prefix}postmeta as pm2 ON p.post_parent = pm2.post_id
+            JOIN {$wpdb->prefix}postmeta as pm2 ON p.ID = pm2.post_id
             WHERE p.post_type = 'product_variation'
             AND p.post_status = 'publish'
             AND pm.meta_key = '_stock'

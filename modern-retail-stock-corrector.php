@@ -3,7 +3,7 @@
 Plugin Name: Modern Retail Stock Corrector 
 Description: Checks for incorrect stock status for product variations.
 Author: Clay Harmon
-Version: 1.1.1 
+Version: 1.2.0 
 Text Domain: cc-mrsc
 */
 
@@ -152,8 +152,13 @@ function cc_mrsc_print_table_products_with_incorrect_stock_status(){
 
 function cc_mrsc_correct_all_incorrect_stock_statuses($limit = -1){
   $products_with_incorrect_stock_status = cc_mrsc_get_products_with_incorrect_status($limit);
+  $variations_with_incorrect_stock_status= cc_mrsc_get_variations_with_incorrect_status($limit);
   foreach($products_with_incorrect_stock_status as $queried_product){
     wc_update_product_stock_status($queried_product->ID, "instock");
+	}
+  foreach($variations_with_incorrect_stock_status as $queried_variation){
+    $status = "instock";
+    update_post_meta( $queried_variation->ID, '_stock_status', wc_clean( $status ) );
 	}
 }
 

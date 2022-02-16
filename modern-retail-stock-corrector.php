@@ -67,10 +67,30 @@ function cc_mrsc_get_products_with_incorrect_status($limit = -1){
   return $wpdb->get_results($sql_string);
 }
 
+function cc_mrsc_get_variations_with_incorrect_status($limit = -1){
+	global $wpdb;
+  $sql_string = "
+            SELECT p.ID, p.post_parent, pm.meta_value as stock, pm2.meta_value as stock_status
+            FROM {$wpdb->prefix}posts as p
+            JOIN {$wpdb->prefix}postmeta as pm ON p.ID = pm.post_id
+            JOIN {$wpdb->prefix}postmeta as pm2 ON p.post_parent = pm2.post_id
+            WHERE p.post_type = 'product_variation'
+            AND p.post_status = 'publish'
+            AND pm.meta_key = '_stock'
+            AND pm.meta_value > 0
+            AND pm2.meta_key = '_stock_status'
+            AND pm2.meta_value = 'outofstock'
+  ";
+  $sql_string .= ($limit >= 0) ? " LIMIT 0," . esc_sql( $limit ) : "";
+  return $wpdb->get_results($sql_string);
+}
 
 function cc_mrsc_print_table_products_with_incorrect_stock_status(){
 	$products_with_incorrect_stock_status = cc_mrsc_get_products_with_incorrect_status();
 	$total_products = count($products_with_incorrect_stock_status);
+  
+  $variations_with_incorrect_stock_status = cc_mrsc_get_variations_with_incorrect_status();
+  $total_variations = count($variations_with_incorrect_stock_status);
 	if($total_products !== 0 ){
 	?>
     <p>Total: <?php echo $total_products ?></p>
@@ -97,7 +117,35 @@ function cc_mrsc_print_table_products_with_incorrect_stock_status(){
 		</table>
 	<?php
 	} else {
-		echo "All products are correct.";
+		echo "<p>All products are correct.</p>";
+	}
+	if($total_variations!== 0 ){
+	?>
+    <p>Total Variations: <?php echo $total_variations?></p>
+		<table class="wp-list-table widefat fixed striped table-view-list posts">
+			<thead>
+				<th scope="col" id="name" class="manage-column column-name"><span>Name</span></th>
+			</thead>
+			<tbody id="the-list">
+				<?php
+				foreach($variations_with_incorrect_stock_status as $queried_variation){
+					$product = wc_get_product( $queried_variation->ID );
+					?>
+					<tr>
+						<td>
+							<a href='/wp-admin/post.php?post=<?php echo $queried_variation->post_parent; ?>&action=edit' target='_blank'>
+								<?php echo $product->get_formatted_name(); ?>
+							</a>
+						</td>
+					</tr>
+						<?php
+				}
+				?>
+			</tbody>
+		</table>
+	<?php
+	} else {
+		echo "<p>All variations are correct.</p>";
 	}
 }
 
